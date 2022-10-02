@@ -1,0 +1,246 @@
+<!DOCTYPE HTML>
+<html lang='en'>
+<head>
+<meta charset='utf-8'>
+<title>AJAX Examples</title>
+<script>
+
+//TMJRock part starts here
+function $$$(cid){
+let element=document.getElementById(cid);
+if(!element)throw "Invalid id: "+id;
+return new TMJRockElement(element);
+};
+
+$$$.model={
+"onStartup":[],
+"accordians":[]
+}
+
+$$$.accordianHeadingClicked=function(accordianIndex,panelIndex)
+{
+/*
+if($$$.model.accordians[accordianIndex].expandedIndex!=-1)
+$$$.model.accordians[accordianIndex].panels[$$$.model.accordians[accordianIndex].expandedIndex].style.display='none';
+$$$.model.accordians[accordianIndex].panels[panelIndex+1].style.display=$$$.model.accordians[accordianIndex].panels[panelIndex+1].oldDisplay;
+$$$.model.accordians[accordianIndex].expandedIndex=panelIndex+1;
+*/
+var kkk=$$$.model.accordians[accordianIndex];
+if(kkk.expandedIndex!=-1)
+kkk.panels[kkk.expandedIndex].style.display='none';
+kkk.panels[panelIndex+1].style.display=kkk.panels[panelIndex+1].oldDisplay;
+kkk.expandedIndex=panelIndex+1;
+}
+
+$$$.toAccordian=function(accord)
+{
+let panels=[];
+let expandedIndex=-1;
+//let accord=document.getElementById(aid);
+let children=accord.childNodes;
+let x;
+for(x=0;x<children.length;x++)
+{
+if(children[x].nodeName=="H1")panels[panels.length]=children[x];
+else if(children[x].nodeName=="H2")panels[panels.length]=children[x];
+else if(children[x].nodeName=="H3")panels[panels.length]=children[x];
+else if(children[x].nodeName=="H4")panels[panels.length]=children[x];
+else if(children[x].nodeName=="H5")panels[panels.length]=children[x];
+else if(children[x].nodeName=="H6")panels[panels.length]=children[x];
+if(children[x].nodeName=="DIV")panels[panels.length]=children[x];
+}
+if(panels.length%2!=0)throw "Heading and division malformed to create according";
+let name=0;
+for(x=0;x<panels.length;x+=2)
+{
+name=panels[x].nodeName;
+if((name!="H1")&&(name!="H2")&&(name!="H3")&&(name!="H4")&&(name!="H5")&&(name!="H6"))
+throw "heading malformed to create  according";
+if(panels[x+1].nodeName!="DIV")throw "division malformed to create according";
+}
+
+function createClickHandler(accordianIndex,panelIndex)
+{
+return function(){
+$$$.accordianHeadingClicked(accordianIndex,panelIndex);
+};
+}
+let accordianIndex=$$$.model.accordians.length;
+for(x=0;x<panels.length;x+=2)
+{
+panels[x].onclick=createClickHandler(accordianIndex,x);
+panels[x+1].oldDisplay=panels[x+1].style.display;
+panels[x+1].style.display="none";
+}
+
+$$$.model.accordians[accordianIndex]={
+"panels":panels,
+"expandedIndex":-1
+};
+}
+
+$$$.onDocumentLoaded=function(func){
+if((typeof func)!="function")throw "Expected function ,found "+(typeof func)+" is call to onDocumentLoaded";
+$$$.model.onStartup[$$$.model.onStartup.length]=func;
+};
+
+$$$.initFramework=function(){
+let allTags=document.getElementsByTagName("*");
+let x=0;
+let t=0;
+let a=null;
+for(x=0;x<allTags.length;x++)
+{
+t=allTags[x];
+if(t.hasAttribute('accordian'))
+{
+a=t.getAttribute('accordian');
+if(a=='true')$$$.toAccordian(t);
+}
+}
+x=0;
+while(x<$$$.model.onStartup.length)
+{
+$$$.model.onStartup[x]();
+x++;
+}
+};
+
+
+window.addEventListener('load',function(){
+$$$.initFramework();
+});
+
+function TMJRockElement(element)
+{
+this.element=element;
+this.html=function(content)
+{
+if(typeof this.element.innerHTML=="string")
+{
+if((typeof content)=="string")
+{
+this.element.innerHTML=content;
+}
+return this.element.innerHTML;
+}
+return null;
+}// html function ends here
+
+this.fillComboBox=function(jsonObject){
+
+if(this.element.nodeName!="SELECT")throw "fillComboBox can be called on a SELECT type object only";
+
+//validate if dataSource, text and property exists
+//if dataSource exist,then there should be a collection against it
+//if text property exists,then it should be of string type
+// if value property exists, then it should be of string type
+// if text property exists and it is of string type then that should be part of data element
+// if value property exists and it is of string type then that should be part of dataSource element
+// if first option is specified then it should have 2 property of string type text and value ,check for that
+// clear all existing option from select
+// if first option exists, create option tag and append it to SELECT
+// traverse the dataSource array and on every cycle create option tag and append it to SELECT
+
+if(!jsonObject["dataSource"])throw "dataSource property is missing in call to AJAX";
+if((jsonObject["dataSource"].length)<0)throw "dataSource have collection against it";
+
+if(!jsonObject["text"])throw "text property is missing in call to ajax";
+if(typeof jsonObject["text"]!="string")throw "text property should be of string type in call to ajax";
+
+if(!jsonObject["value"])throw "value property is missing in call to ajax";
+if(typeof jsonObject["value"]!="string")throw "value property should be of string type in call to ajax";
+
+if(!jsonObject["firstOption"])throw "firstName property is missing in call to ajax";
+let firstOption=jsonObject["firstOption"];
+
+if(!firstOption["text"])throw "text property is missing along firstOption in call to ajax";
+if(typeof firstOption["text"]!="string")throw "text property should of type string along firstOption in call to ajax";
+
+if(!firstOption["value"])throw "value property is missing along firstOption in call to ajax";
+if(typeof firstOption["value"]!="string")throw "value property should of type string along firstOption in call to ajax";
+this.element.size=0;
+
+var optionTag=document.createElement('option');
+optionTag.value=firstOption["value"];
+optionTag.text=firstOption["text"];
+this.element.append(optionTag);
+
+let dataSource=jsonObject["dataSource"];
+for(let key in dataSource)
+{
+optionTag=document.createElement('option');
+optionTag.value=key.code;
+optionTag.text=dataSource[key].title;
+this.element.append(optionTag);
+}
+}//fill combo box ends here
+
+
+
+this.value=function(content)
+{
+if(typeof this.element.value=="string")
+{
+if((typeof content)=="string")
+{
+this.element.value=content;
+}
+return this.element.value;
+}
+return null;
+}//html function ends here
+};//TMJRock class ends here
+
+
+
+
+</script>
+</head>
+<body>
+<div accordian='true'>
+<h3>Heading 1</h3>
+<div>
+1 whatever whatever <br>
+2 whatever whatever <br>
+3 whatever whatever
+</div>
+<h3>Heading 2</h3>
+<div>
+11 whatever whatever <br>
+22 whatever whatever <br>
+33 whatever whatever
+</div>
+<h3>Heading 3 </h3>
+<div>
+111 whatever whatever  <br>
+222 whatever whatever <br>
+333 whatever whatever
+</div>
+</div>
+
+
+<div accordian='true'>
+<h3>Heading 1</h3>
+<div>
+1 whatever whatever <br>
+2 whatever whatever <br>
+3 whatever whatever
+</div>
+<h3>Heading 2</h3>
+<div>
+11 whatever whatever <br>
+22 whatever whatever <br>
+33 whatever whatever
+</div>
+<h3>Heading 3</h3>
+<div>
+111 whatever whatever  <br>
+222 whatever whatever <br>
+333 whatever whatever
+</div>
+</div>
+
+
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html lang='en'>
+<head>
+<meta charset='utf-8'>
+<title>AJAX Examples</title>
+<script>
+//This will finally be part of TMJRock javascript library
+var $$$=function(){
+};
+$$$.ajax=function(obj){
+var method=obj.methodType;
+var xmlHttpRequest=new XMLHttpRequest();
+xmlHttpRequest.onreadystatechange=function()
+{
+if(this.readyState==4)
+{
+if(this.status==200)obj.success(this.responseText);
+else obj.failure;
+}
+}
+xmlHttpRequest.open(obj.methodType,obj.url,true);
+xmlHttpRequest.send();
+};
+//TMJRock javascript library code ends here
+function populateDesignations()
+{
+$$$.ajax({
+"url":"servletOne",
+"methodType":"GET",
+"success":function(responseData){
+var obj;
+var designations=JSON.parse(responseData);
+var designationsComboBox=document.getElementById("designations");
+for(var i=0;i<designations.length;i+=2)
+{
+obj=document.createElement("option");
+obj.value=designations[i].code;
+obj.text=designations[i].title;
+designationsComboBox.appendChild(obj);
+}
+},
+"failure":function()
+{
+alert('Some problem');
+}
+});
+}
+window.addEventListener('load',populateDesignations);
+</script>
+</head>
+<body>
+<h1>Example 1 (Get type example) </h1>
+<select id='designations'>
+</select>
+<br><br>
+<a href='/TMJRock/index.html'>Home</a>
+</body>
+</html>
